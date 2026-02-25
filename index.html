@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>高三成长陪伴助手</title>
+    
+    <!-- 极速 CDN -->
+    <script crossorigin src="https://cdn.staticfile.org/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdn.staticfile.org/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdn.staticfile.org/prop-types/15.8.1/prop-types.min.js"></script>
+    <script crossorigin src="https://cdn.staticfile.org/recharts/2.12.2/Recharts.min.js"></script>
+    <script crossorigin src="https://cdn.staticfile.org/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.staticfile.org/marked/12.0.0/marked.min.js"></script>
+    <script src="https://cdn.staticfile.org/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #059669;
+            --bg-color: #f0fdf4;
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --text-main: #064e3b;
+            --text-sub: #4b5563;
+            --safe-top: env(safe-area-inset-top, 20px);
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
+            -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
+        }
+
+        input, button, select, textarea { -webkit-appearance: none; appearance: none; border-radius: 0; font-family: inherit; }
+        input[type="text"], input[type="number"], input[type="password"], textarea, select { background-clip: padding-box; }
+
+        .container {
+            max-width: 480px; margin: 0 auto; min-height: 100vh;
+            padding: 20px; padding-top: calc(var(--safe-top) + 20px); padding-bottom: 100px;
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .praise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 999;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .praise-card {
+            background: white; width: 85%; max-width: 340px; padding: 30px 20px;
+            border-radius: 24px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .card {
+            background: var(--card-bg); border-radius: 20px; padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 16px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .header-card { background: linear-gradient(135deg, #059669 0%, #0d9488 100%); color: white; padding: 24px; overflow: hidden; }
+        
+        .btn {
+            background: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold;
+            color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;
+        }
+        .btn:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-primary { background: linear-gradient(to right, #059669, #0d9488); color: white; width: 100%; padding: 16px; font-size: 1rem; border-radius: 16px; margin-top: 20px; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2); }
+        .btn-ai-copy { background: linear-gradient(to right, #8b5cf6, #6366f1); color: white; width: 100%; }
+        
+        /* AI 按钮 - 治愈系配色 */
+        .btn-ai-student { 
+            background: linear-gradient(120deg, #d1fae5 0%, #a7f3d0 100%); 
+            color: #065f46; 
+            width: 100%; font-size: 0.85rem; border: none;
+        }
+        .btn-ai-parent { 
+            background: linear-gradient(120deg, #ecfccb 0%, #bef264 100%); 
+            color: #365314; 
+            width: 100%; font-size: 0.85rem; border: none;
+        }
+        
+        .btn-link { background: #f3f4f6; color: #4b5563; font-size: 0.85rem; padding: 8px 12px; text-decoration: none; border-radius: 8px; display: inline-block; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+        .input-group label { display: block; font-size: 0.8rem; font-weight: bold; color: #6b7280; margin-bottom: 6px; }
+        .input-field { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 1rem; outline: none; color: #1f2937; }
+        .input-field:focus { border-color: var(--primary); background: white; }
+
+        .slider-container { background: rgba(255,255,255,0.6); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
+        input[type=range] { -webkit-appearance: none; width: 100%; margin-top: 10px; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #059669; margin-top: -8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; }
+
+        .tag { font-size: 0.7rem; padding: 4px 10px; border-radius: 99px; background: #e5e7eb; color: #4b5563; font-weight: 500; display: inline-flex; align-items: center; line-height: 1.2; height: fit-content; }
+        .tag-green { background: #d1fae5; color: #065f46; }
+        .back-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 8px; margin-left: -10px; }
+        
+        .markdown-body { font-size: 0.9rem; line-height: 1.6; color: #374151; }
+        .markdown-body strong { color: #059669; }
+        
+        .rank-badge { padding: 6px 4px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 100%; }
+        .rank-label { font-size: 0.6rem; margin-bottom: 2px; opacity: 0.8; }
+        .rank-val { font-weight: bold; font-size: 0.95rem; }
+
+        .tab-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .subject-tab { padding: 6px 16px; border-radius: 20px; background: #f3f4f6; color: #6b7280; font-size: 0.85rem; white-space: nowrap; transition: all 0.2s; border: 1px solid transparent; }
+        .subject-tab.active { background: #ecfdf5; color: #059669; border-color: #059669; font-weight: bold; }
+        
+        .backup-textarea { width: 100%; height: 150px; font-family: monospace; font-size: 0.8rem; padding: 10px; border: 1px dashed #059669; border-radius: 12px; background: #f0fdf4; color: #064e3b; resize: none; margin: 10px 0; }
+        .backup-textarea:focus { outline: none; border-style: solid; background: white; }
+
+        /* 徽章墙 v5.3 视觉重构 */
+        .badge-wall { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 12px; 
+            margin-bottom: 15px; 
+            max-height: 190px; 
+            overflow-y: auto; 
+            padding-top: 5px;
+        }
+        .badge-item { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; margin-bottom: 5px; }
+        .badge-circle { 
+            background: linear-gradient(135deg, #f0fdf4, #fff); /* 纯净的薄荷白 */
+            border: 2px solid #86efac; /* 柔和的青柠绿边框 */
+            border-radius: 50%; width: 50px; height: 50px; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.1); 
+            font-size: 1.5rem; margin-bottom: 6px;
+            color: #059669;
+        }
+        .badge-name { font-size: 0.6rem; text-align: center; font-weight: bold; line-height: 1.2; color: #047857; margin-bottom: 2px; }
+        .badge-detail { font-size: 0.5rem; color: #6b7280; text-align: center; transform: scale(0.9); white-space: nowrap; }
+        .badge-sub { font-size: 0.5rem; color: #059669; text-align: center; transform: scale(0.9); font-weight: bold; opacity: 0.8; }
+        
+        .progress-container { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin-top: 10px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #fcd34d, #f59e0b); border-radius: 4px; transition: width 1s ease-in-out; }
+
+        .diary-item { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .diary-date { font-size: 0.7rem; color: #9ca3af; margin-bottom: 4px; }
+        .diary-content { font-size: 0.95rem; color: #374151; line-height: 1.6; white-space: pre-wrap; }
+        
+        .checkbox-label { display: flex; align-items: center; font-size: 0.85rem; margin-bottom: 8px; color: #4b5563; }
+        .checkbox-label input { width: auto; margin-right: 8px; margin-top: 0; transform: scale(1.2); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" charset="utf-8">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const { createRoot } = ReactDOM;
+        // 核心库
+        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Area, AreaChart, ReferenceDot, LabelList } = Recharts;
+
+        const SUBJECTS = ['语文', '数学', '英语', '物理', '化学', '政治'];
+        const FULL_MARKS = { '语文':150, '数学':150, '英语':150, '物理':100, '化学':100, '政治':100 };
+        const SEMESTERS = ['高一下', '高二上', '高二下', '高三上', '高三下'];
+
+        // --- 通用复制函数 ---
+        const copyTextToClipboard = (text, onSuccess, onFail) => {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(onSuccess).catch(() => fallbackCopy(text, onSuccess, onFail));
+            } else {
+                fallbackCopy(text, onSuccess, onFail);
+            }
+        };
+
+        const fallbackCopy = (text, onSuccess, onFail) => {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed"; textArea.style.top = "0"; textArea.style.left = "0"; textArea.style.opacity = "0.01";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (successful) onSuccess();
+                else onFail();
+            } catch (err) { onFail(); }
+        };
+
+        // --- 树洞组件 ---
+        const TreeHole = ({ title, prefix, defaultPwd, defaultMsg, theme, resetCode }) => {
+            const [publicMsg, setPublicMsg] = useState(defaultMsg);
+            const [diaryList, setDiaryList] = useState([]);
+            const [isLocked, setIsLocked] = useState(true);
+            const [password, setPassword] = useState(defaultPwd);
+            
+            const [mode, setMode] = useState('view');
+            const [inputPwd, setInputPwd] = useState("");
+            const [isEditingMsg, setIsEditingMsg] = useState(false);
+            const [diaryInput, setDiaryInput] = useState("");
+            const [editingDiaryId, setEditingDiaryId] = useState(null); 
+            const [errorMsg, setErrorMsg] = useState(""); 
+            const [pwdForm, setPwdForm] = useState({ old:"", new1:"", new2:"" });
+            // 新增：删除确认状态
+            const [deleteConfirmId, setDeleteConfirmId] = useState(null); 
+            // 新增：文本框引用
+            const textareaRef = useRef(null);
+
+            useEffect(() => {
+                const savedMsg = localStorage.getItem(`grade_app_${prefix}_msg`); if (savedMsg) setPublicMsg(savedMsg);
+                const savedDiary = localStorage.getItem(`grade_app_${prefix}_diary`); if (savedDiary) setDiaryList(JSON.parse(savedDiary));
+                const savedPwd = localStorage.getItem(`grade_app_${prefix}_pwd`); if (savedPwd) setPassword(savedPwd);
+            }, [prefix]);
+
+            useEffect(() => localStorage.setItem(`grade_app_${prefix}_msg`, publicMsg), [publicMsg, prefix]);
+            useEffect(() => localStorage.setItem(`grade_app_${prefix}_diary`, JSON.stringify(diaryList)), [diaryList, prefix]);
+            useEffect(() => localStorage.setItem(`grade_app_${prefix}_pwd`, password), [password, prefix]);
+
+            const handleToggleLock = () => {
+                if (mode === 'content' || mode === 'changePwd' || mode === 'resetPwd') { setMode('view'); setIsLocked(true); } 
+                else if (mode === 'view') { setMode('unlock'); setInputPwd(""); setErrorMsg(""); } 
+                else if (mode === 'unlock') { setMode('view'); }
+            };
+
+            const handleUnlock = () => {
+                if (inputPwd === password || inputPwd === resetCode) { 
+                    setIsLocked(false); setMode('content'); setInputPwd(""); setErrorMsg("");
+                    if(inputPwd === resetCode) alert("🔓 已使用重置码解锁！请立即修改密码。");
+                } else { setErrorMsg("密码错误，不要偷看我的秘密噢"); setTimeout(() => setErrorMsg(""), 2500); }
+            };
+
+            const handleResetPwd = () => {
+                if (inputPwd === resetCode) { setPassword(defaultPwd); alert(`✅ 密码已重置为：${defaultPwd}`); setMode('unlock'); setInputPwd(""); setErrorMsg(""); } else { setErrorMsg("重置码错误"); }
+            };
+
+            const handleChangePwdSubmit = () => {
+                if (pwdForm.old !== password && pwdForm.old !== resetCode) { setErrorMsg("旧密码错误"); return; }
+                if (pwdForm.new1.length < 4) { setErrorMsg("新密码太短啦"); return; }
+                if (pwdForm.new1 !== pwdForm.new2) { setErrorMsg("两次输入不一致"); return; }
+                setPassword(pwdForm.new1); alert("✅ 密码修改成功！"); setMode('content'); setIsLocked(false); setPwdForm({ old:"", new1:"", new2:"" }); setErrorMsg("");
+            };
+
+            const handleSaveDiary = () => {
+                if (!diaryInput.trim()) return;
+                const nowStr = new Date().toLocaleString();
+                if (editingDiaryId) {
+                    const updatedList = diaryList.map(d => d.id === editingDiaryId ? { ...d, content: diaryInput, date: nowStr + " (已修改)" } : d);
+                    setDiaryList(updatedList); setEditingDiaryId(null); alert("✅ 日记已更新");
+                } else {
+                    const newEntry = { id: Date.now(), date: nowStr, content: diaryInput };
+                    setDiaryList([newEntry, ...diaryList]); alert("✨ 已记录到时光机");
+                }
+                setDiaryInput("");
+            };
+
+            const handleEditDiary = (diary) => {
+                setDiaryInput(diary.content); setEditingDiaryId(diary.id);
+                setTimeout(() => { if (textareaRef.current) { textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' }); textareaRef.current.focus(); } }, 100);
+            };
+
+            const handleDeleteDiary = (id) => { 
+                if (deleteConfirmId === id) { setDiaryList(diaryList.filter(d => d.id !== id)); setDeleteConfirmId(null); } 
+                else { setDeleteConfirmId(id); setTimeout(() => setDeleteConfirmId(null), 3000); }
+            };
+
+            const cardStyle = { border: `2px dashed ${theme.border}`, background: theme.bg, marginTop: '16px' };
+            const btnStyle = { width: '100%', marginTop: '5px', fontSize: '0.85rem', background: theme.btn, color: 'white' };
+
+            return (
+                <div className="card fade-in" style={cardStyle}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
+                        <div style={{fontWeight:'bold', color: theme.title, fontSize:'1rem'}}>{title}</div>
+                        <span onClick={handleToggleLock} style={{fontSize:'1.3rem', cursor:'pointer'}}>{(mode==='view'||mode==='unlock'||mode==='resetPwd') ? '🔒' : '🔓'}</span>
+                    </div>
+                    {mode === 'unlock' && (
+                        <div className="fade-in" style={{padding:'10px', background:'white', borderRadius:'10px'}}>
+                            <div className="input-group"><input type="password" placeholder="请输入密码" className={`input-field ${errorMsg ? 'shake' : ''}`} value={inputPwd} onChange={e=>{setInputPwd(e.target.value); setErrorMsg("");}} /></div>
+                            {errorMsg && <div style={{color:'#ef4444', fontSize:'0.8rem', marginTop:'5px', fontWeight:'bold'}}>{errorMsg}</div>}
+                            <button className="btn" onClick={handleUnlock} style={{marginTop:'10px', background: theme.btn, color:'white', width:'100%'}}>进入树洞</button>
+                            <div style={{textAlign:'center', marginTop:'10px'}}><span onClick={()=>{setMode('resetPwd'); setInputPwd(""); setErrorMsg("");}} style={{fontSize:'0.7rem', color:'#9ca3af', textDecoration:'underline', cursor:'pointer'}}>忘记密码?</span></div>
+                        </div>
+                    )}
+                    {mode === 'resetPwd' && (
+                        <div className="fade-in" style={{padding:'10px', background:'white', borderRadius:'10px'}}>
+                            <div style={{fontSize:'0.8rem', color: theme.title, marginBottom:'5px', fontWeight:'bold'}}>🔐 开发者重置通道</div>
+                            <div className="input-group"><input type="password" placeholder="请输入重置码" className={`input-field ${errorMsg ? 'shake' : ''}`} value={inputPwd} onChange={e=>{setInputPwd(e.target.value); setErrorMsg("");}} /></div>
+                            {errorMsg && <div style={{color:'#ef4444', fontSize:'0.8rem', marginTop:'5px', fontWeight:'bold'}}>{errorMsg}</div>}
+                            <div style={{display:'flex', gap:'10px', marginTop:'10px'}}><button className="btn" onClick={()=>setMode('unlock')} style={{flex:1, background:'#f3f4f6', color:'#4b5563'}}>取消</button><button className="btn" onClick={handleResetPwd} style={{flex:1, background: '#ef4444', color:'white'}}>重置</button></div>
+                            <div style={{fontSize:'0.7rem', color:'#9ca3af', marginTop:'10px', textAlign:'center'}}>* 请联系开发者获取重置码</div>
+                        </div>
+                    )}
+                    {mode === 'view' && (
+                        <div style={{padding:'5px 0'}}>
+                            {isEditingMsg ? ( <input className="input-field" value={publicMsg} onChange={e=>setPublicMsg(e.target.value)} onBlur={()=>setIsEditingMsg(false)} autoFocus style={{fontSize:'0.9rem', color: theme.text, width:'100%'}} /> ) : ( <div style={{fontSize:'0.9rem', color: theme.text, cursor:'pointer', textAlign:'left', lineHeight:'1.5'}} onClick={()=>setIsEditingMsg(true)}> “{publicMsg}” <span style={{fontSize:'0.7rem', opacity:0.5}}>✏️</span></div> )}
+                        </div>
+                    )}
+                    {mode === 'content' && (
+                        <div className="fade-in">
+                            <div style={{marginBottom:'10px', textAlign:'right'}}><span onClick={()=>{setMode('changePwd'); setErrorMsg("");}} style={{fontSize:'0.75rem', color: theme.border, textDecoration:'underline', cursor:'pointer'}}>修改密码</span></div>
+                            <div style={{marginBottom:'15px'}}>
+                                <textarea ref={textareaRef} className="input-field diary-textarea" rows="3" placeholder="写点什么..." value={diaryInput} onChange={e=>setDiaryInput(e.target.value)} style={{background:'white'}} />
+                                <button className="btn" onClick={handleSaveDiary} style={btnStyle}>{editingDiaryId ? '💾 保存修改' : '✍️ 记录'}</button>{editingDiaryId && <div onClick={()=>{setEditingDiaryId(null); setDiaryInput("")}} style={{fontSize:'0.7rem', color:'#9ca3af', textAlign:'center', marginTop:'5px', cursor:'pointer'}}>取消修改</div>}</div>
+                            <div style={{maxHeight:'300px', overflowY:'auto'}}>
+                                {diaryList.length === 0 && <div style={{textAlign:'center', color: theme.border, fontSize:'0.8rem'}}>空空如也，写下第一篇日记吧~</div>}
+                                {diaryList.map(diary => ( 
+                                    <div key={diary.id} className="diary-item" style={{borderLeftColor: theme.btn}}>
+                                        <div style={{display:'flex', justifyContent:'space-between'}}>
+                                            <div className="diary-date">{diary.date}</div>
+                                            <div style={{display:'flex', gap:'8px'}}>
+                                                <span style={{color:theme.btn, fontSize:'0.7rem', cursor:'pointer'}} onClick={()=>handleEditDiary(diary)}>✎</span>
+                                                <span style={{color: deleteConfirmId === diary.id ? '#ef4444' : '#9ca3af', fontSize:'0.7rem', cursor:'pointer', fontWeight: deleteConfirmId === diary.id ? 'bold' : 'normal'}} onClick={()=>handleDeleteDiary(diary.id)}>{deleteConfirmId === diary.id ? '确定?' : '×'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="diary-content">{diary.content}</div>
+                                    </div> 
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {mode === 'changePwd' && (
+                        <div className="fade-in" style={{padding:'10px', background:'white', borderRadius:'10px'}}>
+                            <div style={{fontSize:'0.9rem', fontWeight:'bold', marginBottom:'10px', color: theme.title}}>修改密码</div>
+                            <div className="input-group"><label>旧密码</label><input type="password" className="input-field" value={pwdForm.old} onChange={e=>setPwdForm({...pwdForm, old:e.target.value})} /></div>
+                            <div className="input-group" style={{marginTop:'8px'}}><label>新密码</label><input type="password" className="input-field" value={pwdForm.new1} onChange={e=>setPwdForm({...pwdForm, new1:e.target.value})} /></div>
+                            <div className="input-group" style={{marginTop:'8px'}}><label>确认新密码</label><input type="password" className="input-field" value={pwdForm.new2} onChange={e=>setPwdForm({...pwdForm, new2:e.target.value})} /></div>
+                            {errorMsg && <div style={{color:'#ef4444', fontSize:'0.8rem', marginTop:'8px', fontWeight:'bold'}}>{errorMsg}</div>}
+                            <div style={{display:'flex', gap:'10px', marginTop:'15px'}}><button className="btn" onClick={()=>setMode('content')} style={{flex:1, background:'#f3f4f6', color:'#4b5563'}}>取消</button><button className="btn" onClick={handleChangePwdSubmit} style={{flex:1, background: theme.btn, color:'white'}}>确认修改</button></div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        function App() {
+            const [exams, setExams] = useState([]);
+            const [view, setView] = useState('dashboard');
+            const [studentName, setStudentName] = useState("何彦熹");
+            const [familyMessage, setFamilyMessage] = useState("星光不问赶路人，时光不负有心人。");
+            const [apiKey, setApiKey] = useState("");
+            const [isEditingName, setIsEditingName] = useState(false);
+            const [isEditingMessage, setIsEditingMessage] = useState(false);
+            const [showDataBackup, setShowDataBackup] = useState(false);
+            const [importText, setImportText] = useState("");
+            const [greeting, setGreeting] = useState("你好");
+            
+            const [exportStage, setExportStage] = useState('select'); 
+            const [targetExport, setTargetExport] = useState(''); 
+            const [verifyPwd, setVerifyPwd] = useState('');
+            const [exportResult, setExportResult] = useState('');
+            const [exportError, setExportError] = useState('');
+            const [praiseData, setPraiseData] = useState(null); 
+
+            const [aiStep, setAiStep] = useState(0); 
+            const [aiResult, setAiResult] = useState("");
+            const [isAiLoading, setIsAiLoading] = useState(false);
+            const [showAdvancedAI, setShowAdvancedAI] = useState(false);
+            const [analysisSubject, setAnalysisSubject] = useState('总分');
+            const [formData, setFormData] = useState(initialFormState());
+            const [showStateInput, setShowStateInput] = useState(false);
+            const [editModeId, setEditModeId] = useState(null); 
+            const inputRefs = useRef({});
+            const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, progress: 0 });
+
+            useEffect(() => {
+                const hour = new Date().getHours();
+                if (hour >= 6 && hour < 9) setGreeting("早安，新的一天加油鸭！☀️");
+                else if (hour >= 9 && hour < 12) setGreeting("上午好呀，保持好心情哦 ✨");
+                else if (hour >= 12 && hour < 18) setGreeting("下午好，你的坚持自带光芒 ✨");
+                else if (hour >= 18 && hour < 23) setGreeting("晚上好，今天辛苦啦 🌟");
+                else setGreeting("夜深了，早点休息哦 🌙");
+
+                try {
+                    const savedData = localStorage.getItem('grade_app_v4_data');
+                    if (savedData) setExams(JSON.parse(savedData));
+                    else { const v3 = localStorage.getItem('grade_app_v3_data'); if (v3) setExams(JSON.parse(v3)); }
+                    const msg = localStorage.getItem('grade_app_v4_msg'); if (msg) setFamilyMessage(msg);
+                    const name = localStorage.getItem('grade_app_v4_name'); if (name) setStudentName(name);
+                    const key = localStorage.getItem('grade_app_apikey'); if (key) { setApiKey(key); setShowAdvancedAI(true); }
+                } catch(e) { console.error("Load Error", e); }
+            }, []);
+
+            useEffect(() => localStorage.setItem('grade_app_v4_data', JSON.stringify(exams)), [exams]);
+            useEffect(() => localStorage.setItem('grade_app_v4_msg', familyMessage), [familyMessage]);
+            useEffect(() => localStorage.setItem('grade_app_v4_name', studentName), [studentName]);
+            useEffect(() => localStorage.setItem('grade_app_apikey', apiKey), [apiKey]);
+
+            useEffect(() => {
+                const tick = () => {
+                    const now = new Date();
+                    const target = new Date(2026, 5, 7, 9, 0, 0); 
+                    const start = new Date(2025, 7, 1, 0, 0, 0); 
+                    const totalDuration = target - start;
+                    const elapsed = now - start;
+                    let progress = (elapsed / totalDuration) * 100;
+                    if (progress > 100) progress = 100; if (progress < 0) progress = 0;
+                    const diff = target - now;
+                    if (diff > 0) {
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                        setTimeLeft({ days, hours, minutes, seconds, progress });
+                    } else { setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, progress: 100 }); }
+                };
+                tick(); const timer = setInterval(tick, 1000); return () => clearInterval(timer);
+            }, []);
+
+            function initialFormState() { return { semester: '高三上', examName: '', scores: { '语文': '', '数学': '', '英语': '', '物理': '', '化学': '', '政治': '' }, ranks: { '语文': '', '数学': '', '英语': '', '物理': '', '化学': '', '政治': '' }, totalScore: '', schoolRank: '', classRank: '', levelRank: '', note: '', sleepQuality: 3, stressLevel: 3, difficulty: 3 }; }
+
+            // 计算极值
+            const extrema = useMemo(() => {
+                if (exams.length === 0) return null;
+                const getValue = (e) => {
+                    if (analysisSubject === '总分') return Number(e.totalScore);
+                    return Number(e.scores && e.scores[analysisSubject]);
+                };
+                const valid = exams.filter(e => {
+                    const v = getValue(e);
+                    return v !== null && v !== undefined && !isNaN(v) && v > 0;
+                });
+                if (valid.length === 0) return null;
+                const sorted = [...valid].sort((a, b) => getValue(a) - getValue(b));
+                const min = sorted[0];
+                const max = sorted[sorted.length - 1];
+                return { 
+                    min: { val: getValue(min), name: min.examName, semester: min.semester }, 
+                    max: { val: getValue(max), name: max.examName, semester: max.semester } 
+                };
+            }, [exams, analysisSubject]);
+
+            const badges = useMemo(() => {
+                const list = [];
+                const sortedExams = [...exams].sort((a,b) => a.timestamp - b.timestamp);
+                sortedExams.forEach((exam, index) => {
+                    SUBJECTS.forEach(sub => { 
+                        const threshold = sub === '政治' ? 225 : 525;
+                        if (exam.ranks && exam.ranks[sub] && exam.ranks[sub] <= threshold) {
+                            list.push({ icon: '🏅', name: `${sub}战神`, desc: `${sub}年排${exam.ranks[sub]}`, exam: exam.examName, shortDesc: sub, semester: exam.semester }); 
+                        }
+                    });
+                    if (index > 0) {
+                        const prev = sortedExams[index-1];
+                        let isCb = false;
+                        if ((exam.totalScore||0) > (prev.totalScore||0) + 10) isCb=true;
+                        if ((prev.schoolRank||9999) - (exam.schoolRank||9999) >= 50) isCb=true;
+                        SUBJECTS.forEach(sub=>{ 
+                            if((exam.scores[sub]||0) > (prev.scores[sub]||0) + 5) isCb=true;
+                            if((prev.ranks[sub]||9999) - (exam.ranks[sub]||9999) >= 100) isCb=true;
+                        });
+                        if(isCb) list.push({ icon: '🚀', name: '逆风翻盘', desc: '进步显著', exam: exam.examName, semester: exam.semester });
+                    }
+                    if (index>=2) {
+                        const p1=sortedExams[index-1], p2=sortedExams[index-2];
+                        SUBJECTS.forEach(sub=>{
+                            if(exam.ranks[sub] && p1.ranks[sub] && p2.ranks[sub] && Math.abs(exam.ranks[sub]-p1.ranks[sub])<=10 && Math.abs(p1.ranks[sub]-p2.ranks[sub])<=10)
+                                list.push({ icon: '🐢', name: '稳如泰山', desc: `${sub}极其稳定`, exam: exam.examName, semester: exam.semester });
+                        });
+                    }
+                });
+                return list.reverse();
+            }, [exams]);
+
+            const handleSaveExam = () => {
+                if (!formData.examName) { alert("请填写考试名称"); return; }
+                const calculatedTotal = SUBJECTS.reduce((sum, sub) => sum + (Number(formData.scores[sub]) || 0), 0);
+                const inputTotal = Number(formData.totalScore);
+                if (inputTotal > 0 && calculatedTotal > 0 && Math.abs(inputTotal - calculatedTotal) > 0.5) {
+                    if (!window.confirm(`⚠️ 总分核对提醒\n\n系统计算 6 科总和为：${calculatedTotal} 分\n你填写的总分为：${inputTotal} 分\n\n两者不一致，确定要保存吗？`)) return;
+                }
+                const newExam = {
+                    id: editModeId || Date.now().toString(),
+                    timestamp: editModeId ? (exams.find(e=>e.id===editModeId)?.timestamp || Date.now()) : Date.now(),
+                    ...formData,
+                    scores: parseNumObj(formData.scores),
+                    ranks: parseNumObj(formData.ranks),
+                    totalScore: inputTotal || null,
+                    schoolRank: Number(formData.schoolRank) || null,
+                    classRank: Number(formData.classRank) || null,
+                    levelRank: Number(formData.levelRank) || null,
+                };
+                
+                if (!editModeId && exams.length > 0) {
+                    const sortedHistory = [...exams].sort((a,b) => a.timestamp - b.timestamp);
+                    const prev = sortedHistory[sortedHistory.length - 1];
+                    let bigWin = false; let smallWin = false; 
+                    
+                    if ((newExam.totalScore || 0) > (prev.totalScore || 0)) bigWin = true;
+                    if (prev.schoolRank && newExam.schoolRank && newExam.schoolRank < prev.schoolRank) bigWin = true;
+
+                    const improvedSubjects = [];
+                    SUBJECTS.forEach(sub => {
+                        const sRise = (newExam.scores[sub] || 0) - (prev.scores[sub] || 0);
+                        const rRise = (prev.ranks[sub] || 99999) - (newExam.ranks[sub] || 99999);
+                        if (sRise > 0 || (prev.ranks[sub] && rRise > 0)) improvedSubjects.push(sub);
+                    });
+
+                    if (improvedSubjects.length > 0) smallWin = true;
+
+                    if (bigWin) {
+                        try { confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, zIndex: 2000 }); } catch(e){}
+                        setPraiseData({ title: "🎉 太棒了！你的努力终于开花结果啦！", msg: "无论是总分还是排名，\n你的努力都看见了回报！\n请继续保持这个势头！" });
+                    } else if (smallWin) {
+                        setPraiseData({ title: `✨ 即使有波动，但这些亮眼的进步藏不住！`, msg: `虽然总分稍有回落，但你的 **${improvedSubjects.join('、')}** 都有进步！\n这说明你的努力方向是对的，继续保持！` });
+                    }
+                }
+
+                let newExamsList;
+                if (editModeId) { newExamsList = exams.map(e => e.id === editModeId ? newExam : e); } 
+                else { newExamsList = [...exams, newExam]; }
+                setExams(newExamsList); setFormData(initialFormState()); setShowStateInput(false); setEditModeId(null); setView('dashboard');
+            };
+
+            const handleEditExam = (exam) => { setFormData({ semester: exam.semester, examName: exam.examName, scores: { ...exam.scores }, ranks: { ...exam.ranks }, totalScore: exam.totalScore || '', schoolRank: exam.schoolRank || '', classRank: exam.classRank || '', levelRank: exam.levelRank || '', note: exam.note || '', sleepQuality: exam.sleepQuality || 3, stressLevel: exam.stressLevel || 3, difficulty: exam.difficulty || 3 }); setEditModeId(exam.id); setView('add'); };
+            const handleDeleteExam = (id) => { if (window.confirm('确定要删除这条记录吗？')) setExams(exams.filter(e => e.id !== id)); };
+            const parseNumObj = (obj) => { const res = {}; for(let k in obj) res[k] = obj[k] === '' ? null : Number(obj[k]); return res; }
+            const handleEnterKey = (e, nextKey) => { 
+                if (e.key === 'Enter') { 
+                    e.preventDefault(); 
+                    if (nextKey === 'submit') { handleSaveExam(); } 
+                    else if (inputRefs.current[nextKey]) { inputRefs.current[nextKey].focus(); inputRefs.current[nextKey].select(); } 
+                } 
+            };
+
+            const getStudentPrompt = () => { return `我是高三学生${studentName}。这是我最近的考试成绩数据（JSON格式）：${JSON.stringify(exams.slice(-5))}。请你扮演一位温柔、循循善诱的导师。请根据数据分析我的学习状态、优势学科和薄弱环节，并结合我的心态（睡眠/压力评分），给出具体的学习建议和鼓励。语气要温暖，像朋友一样。请用 Markdown 格式输出。`; }
+            
+            const getParentPrompt = () => { return `我是高三学生${studentName}的妈妈。这是孩子最近的考试数据（JSON格式）：${JSON.stringify(exams.slice(-5))}。我性格比较急，容易因为成绩波动而焦虑，有时会忍不住拿孩子和别人攀比，虽然知道不好但很难控制。请你扮演一位资深的教育心理学专家：1. 请先肯定孩子数据中的亮点，安抚我的焦虑。2. 帮我分析孩子目前的真实状态。3. 请给我一些具体的“非暴力沟通”话术，教我如何在不给孩子增加压力的情况下表达关心和支持。语气要温柔坚定，富有同理心。请用 Markdown 格式输出。`; }
+
+            const handleCopyPrompt = (type) => { 
+                if (exams.length === 0) { alert("请先录入一些成绩数据"); return; } 
+                const prompt = type === 'student' ? getStudentPrompt() : getParentPrompt();
+                copyTextToClipboard(prompt, () => { alert("✅ 诊断指令已复制！\n\n请去 Kimi / 豆包 / 文心一言 粘贴。"); setAiStep(1); }, () => { setImportText(prompt); alert("⚠️ 自动复制失败，请手动复制下方框内文字。"); setAiStep(1); }); 
+            };
+            
+            const startExport = (type) => {
+                setTargetExport(type);
+                if (type === 'grades') { generateExport(type); } 
+                else { setExportStage('verify'); setVerifyPwd(''); setExportError(''); }
+            };
+
+            const verifyAndGenerate = () => {
+                let realPwd = "";
+                let resetCode = "";
+                if (targetExport === 'mom') { realPwd = localStorage.getItem('grade_app_mom_pwd') || "050809"; resetCode = "20050809"; } 
+                else if (targetExport === 'yanxi') { realPwd = localStorage.getItem('grade_app_yanxi_pwd') || "080812"; resetCode = "20080812"; }
+
+                if (verifyPwd === realPwd || verifyPwd === resetCode) { generateExport(targetExport, true); } 
+                else { setExportError("密码错误"); }
+            };
+
+            const generateExport = (type, verified = false) => {
+                let data = { version: "v5", date: new Date().toLocaleString(), type: type };
+                if (type === 'grades') { data.exams = exams; } 
+                else if (type === 'mom' && verified) { data.mom = { msg: localStorage.getItem('grade_app_mom_msg'), diary: JSON.parse(localStorage.getItem('grade_app_mom_diary') || '[]'), pwd: localStorage.getItem('grade_app_mom_pwd') }; } 
+                else if (type === 'yanxi' && verified) { data.yanxi = { msg: localStorage.getItem('grade_app_yanxi_msg'), diary: JSON.parse(localStorage.getItem('grade_app_yanxi_diary') || '[]'), pwd: localStorage.getItem('grade_app_yanxi_pwd') }; }
+                setExportResult(JSON.stringify(data)); setExportStage('result');
+            };
+
+            const copyExportResult = () => { copyTextToClipboard(exportResult, () => alert("✅ 复制成功！"), () => alert("⚠️ 自动复制失败，请手动全选复制下方文本框。")); };
+            
+            const handleSmartImport = () => {
+                let raw = importText.trim();
+                if (!raw) { alert("请先粘贴数据！"); return; }
+                try {
+                    let parsed = null;
+                    try { parsed = JSON.parse(raw); } catch(e) { 
+                        const startObj = raw.indexOf('{'); const startArr = raw.indexOf('[');
+                        let cleanJson = raw;
+                        if (startObj !== -1 && (startArr === -1 || startObj < startArr)) { cleanJson = raw.substring(startObj, raw.lastIndexOf('}') + 1); } 
+                        else if (startArr !== -1) { cleanJson = raw.substring(startArr, raw.lastIndexOf(']') + 1); }
+                        parsed = JSON.parse(cleanJson); 
+                    }
+                    if (Array.isArray(parsed)) { setExams(parsed); alert(`✅ 成绩恢复成功！(${parsed.length}条)`); } 
+                    else if (parsed.type === "grades" || (parsed.exams && !parsed.mom && !parsed.yanxi)) { setExams(parsed.exams); alert(`✅ 成绩恢复成功！(${parsed.exams.length}条)`); } 
+                    else if (parsed.type === "mom" || parsed.mom) { const target = parsed.mom || parsed; localStorage.setItem('grade_app_mom_msg', target.msg || ""); localStorage.setItem('grade_app_mom_diary', JSON.stringify(target.diary || [])); localStorage.setItem('grade_app_mom_pwd', target.pwd || "050809"); alert("✅ 妈妈的树洞已恢复！"); window.location.reload(); } 
+                    else if (parsed.type === "yanxi" || parsed.yanxi) { const target = parsed.yanxi || parsed; localStorage.setItem('grade_app_yanxi_msg', target.msg || ""); localStorage.setItem('grade_app_yanxi_diary', JSON.stringify(target.diary || [])); localStorage.setItem('grade_app_yanxi_pwd', target.pwd || "080812"); alert("✅ 彦熹的树洞已恢复！"); window.location.reload(); } 
+                    else { throw new Error("未知格式"); }
+                    setImportText(""); 
+                } catch(e) { alert("❌ 无法识别数据格式。\n" + e.message); }
+            };
+
+            const RankBadge = ({label, value, color}) => { const colors = { blue: { bg: '#eff6ff', text: '#1e40af', title: '#3b82f6' }, orange: { bg: '#fff7ed', text: '#9a3412', title: '#f97316' }, cyan: { bg: '#ecfeff', text: '#155e75', title: '#06b6d4' } }; const c = colors[color] || colors.blue; return ( <div className="rank-badge" style={{background:c.bg}}> <div className="rank-label" style={{color:c.title}}>{label}</div> <div className="rank-val" style={{color:c.text}}>{value || '-'}</div> </div> ); }
+
+            // ⚠️ 关键修复：补全 renderAddForm 函数
+            const renderAddForm = () => (
+                <div className="fade-in">
+                    <div style={{display:'flex', alignItems:'center', marginBottom:'15px'}}>
+                        <button className="back-btn" onClick={()=>setView('dashboard')}>⬅️</button>
+                        <h2 style={{fontSize:'1.2rem', margin:0}}>{editModeId ? '编辑记录' : '录入新成绩'}</h2>
+                    </div>
+                    <div className="card">
+                        <div className="grid-2">
+                            <div className="input-group"><label>学期</label><select className="input-field" value={formData.semester} onChange={e=>setFormData({...formData, semester:e.target.value})}>{SEMESTERS.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+                            <div className="input-group"><label>考试名称</label><input className="input-field" placeholder="例: 一模" value={formData.examName} onChange={e=>setFormData({...formData, examName:e.target.value})} ref={el => inputRefs.current['examName'] = el} onKeyDown={e => handleEnterKey(e, 'score_语文')} /></div>
+                        </div>
+                        <div style={{marginTop:'20px'}}>
+                            <h3 style={{fontSize:'0.9rem', borderLeft:'4px solid #059669', paddingLeft:'8px', marginBottom:'10px'}}>各科表现</h3>
+                            <div className="grid-2">
+                                {SUBJECTS.map((sub, idx) => (
+                                    <div key={sub} style={{background:'#f9fafb', padding:'10px', borderRadius:'10px'}}>
+                                        <div style={{fontSize:'0.8rem', fontWeight:'bold', marginBottom:'5px', display:'flex', justifyContent:'space-between'}}><span>{sub}</span><span style={{fontSize:'0.6rem', color:'#9ca3af', fontWeight:'normal'}}>/{FULL_MARKS[sub]}</span></div>
+                                        <div style={{display:'flex', gap:'5px'}}>
+                                            <input type="number" placeholder="分" className="input-field" value={formData.scores[sub]} onChange={e=>setFormData({...formData, scores: {...formData.scores, [sub]:e.target.value}})} ref={el => inputRefs.current[`score_${sub}`] = el} onKeyDown={e => handleEnterKey(e, `rank_${sub}`)} />
+                                            <input type="number" placeholder="排" className="input-field" value={formData.ranks[sub]} onChange={e=>setFormData({...formData, ranks: {...formData.ranks, [sub]:e.target.value}})} ref={el => inputRefs.current[`rank_${sub}`] = el} onKeyDown={e => handleEnterKey(e, idx < SUBJECTS.length - 1 ? `score_${SUBJECTS[idx+1]}` : 'totalScore')} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div style={{marginTop:'20px', background:'#ecfdf5', padding:'15px', borderRadius:'15px'}}>
+                            <div style={{textAlign:'center', marginBottom:'10px', fontSize:'0.8rem', color:'#059669', opacity:0.8}}>--- 总成绩概览 ---</div>
+                            <div className="grid-2" style={{marginBottom:'10px'}}>
+                                <div className="input-group"><label style={{color:'#059669'}}>总分 (自动核对)</label><input type="number" className="input-field" style={{fontWeight:'bold', color:'#059669', fontSize:'1.2rem'}} value={formData.totalScore} onChange={e=>setFormData({...formData, totalScore:e.target.value})} ref={el => inputRefs.current['totalScore'] = el} onKeyDown={e => handleEnterKey(e, 'classRank')} /></div>
+                                <div className="input-group"><label>班级排名</label><input type="number" className="input-field" value={formData.classRank} onChange={e=>setFormData({...formData, classRank:e.target.value})} ref={el => inputRefs.current['classRank'] = el} onKeyDown={e => handleEnterKey(e, 'schoolRank')} /></div>
+                            </div>
+                            <div className="grid-2">
+                                <div className="input-group"><label>校排</label><input type="number" className="input-field" value={formData.schoolRank} onChange={e=>setFormData({...formData, schoolRank:e.target.value})} ref={el => inputRefs.current['schoolRank'] = el} onKeyDown={e => handleEnterKey(e, 'levelRank')} /></div>
+                                <div className="input-group"><label>级排</label><input type="number" className="input-field" value={formData.levelRank} onChange={e=>setFormData({...formData, levelRank:e.target.value})} ref={el => inputRefs.current['levelRank'] = el} /></div>
+                            </div>
+                        </div>
+                        <div style={{marginTop:'20px', borderTop:'1px solid #f3f4f6', paddingTop:'15px'}}>
+                            <div onClick={()=>setShowStateInput(!showStateInput)} style={{textAlign:'center', fontSize:'0.8rem', color:'#9ca3af', cursor:'pointer', padding:'10px'}}>{showStateInput ? "⬆️ 收起附加信息" : "⬇️ 记录考前状态（选填）"}</div>
+                            {showStateInput && (
+                                <div className="fade-in" style={{marginTop:'10px'}}>
+                                    <RatingSlider label="😴 考前睡眠" value={formData.sleepQuality} onChange={v=>setFormData({...formData, sleepQuality:v})} />
+                                    <RatingSlider label="💓 心理压力" value={formData.stressLevel} onChange={v=>setFormData({...formData, stressLevel:v})} />
+                                    <RatingSlider label="🧠 试卷难度" value={formData.difficulty} onChange={v=>setFormData({...formData, difficulty:v})} />
+                                    <div className="input-group" style={{marginTop:'10px'}}><label>简单备注</label><textarea className="input-field" rows="3" placeholder="写给自己..." value={formData.note} onChange={e=>setFormData({...formData, note:e.target.value})} ref={el => inputRefs.current['note'] = el} onKeyDown={e => handleEnterKey(e, 'submit')} /></div>
+                                </div>
+                            )}
+                        </div>
+                        <button className="btn btn-primary" onClick={handleSaveExam}>💾 {editModeId ? '保存修改' : '完成录入'}</button>
+                    </div>
+                </div>
+            );
+
+            // ⚠️ 关键修复：补全 renderDashboard 界面
+            const renderDashboard = () => {
+                const latest = exams.length > 0 ? exams[exams.length - 1] : null;
+                return (
+                    <div className="fade-in">
+                        {praiseData && (
+                            <div className="praise-overlay">
+                                <div className="praise-card">
+                                    <div style={{fontSize:'3rem'}}>🎉</div>
+                                    <h2 style={{color:'#059669', margin:'10px 0', fontSize:'1.2rem'}}>{praiseData.title}</h2>
+                                    <div style={{color:'#4b5563', fontSize:'0.9rem', lineHeight:'1.6', whiteSpace:'pre-line'}} dangerouslySetInnerHTML={{__html: marked.parse(praiseData.msg)}}></div>
+                                    <button className="btn btn-primary" style={{marginTop:'20px'}} onClick={()=>setPraiseData(null)}>开心收下 ❤️</button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="card header-card">
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                                <div style={{width:'100%'}}>
+                                    {isEditingName ? ( <input className="input-field" style={{fontSize:'1.2rem', marginBottom:'5px'}} value={studentName} onChange={e=>setStudentName(e.target.value)} onBlur={()=>setIsEditingName(false)} autoFocus /> ) : ( <div className="header-title" onClick={()=>setIsEditingName(true)}>🌱 {studentName}的档案 <span style={{fontSize:'0.8rem', opacity:0.6}}>✏️</span></div> )}
+                                    <div style={{fontSize:'0.85rem', marginBottom:'10px', opacity:0.95}}>{greeting}</div>
+                                    {isEditingMessage ? ( <input className="input-field" style={{background:'rgba(255,255,255,0.2)', color:'white', border:'none'}} value={familyMessage} onChange={e=>setFamilyMessage(e.target.value)} onBlur={()=>setIsEditingMessage(false)} autoFocus /> ) : ( <div className="header-subtitle" onClick={()=>setIsEditingMessage(true)}>“{familyMessage}” <span style={{fontSize:'0.8rem', opacity:0.6}}>✏️</span></div> )}
+                                    <div style={{marginTop:'20px', background:'rgba(0,0,0,0.1)', padding:'10px', borderRadius:'10px'}}>
+                                        <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.8rem', marginBottom:'5px'}}><span>🏁 距离2026高考</span><span style={{fontWeight:'bold'}}>{timeLeft.days}天 {timeLeft.hours}时 {timeLeft.minutes}分 {timeLeft.seconds}秒</span></div>
+                                        <div className="progress-container"><div className="progress-bar" style={{width: `${timeLeft.progress}%`}}></div></div>
+                                        <div style={{fontSize:'0.65rem', textAlign:'right', marginTop:'2px', opacity:0.8}}>已奋斗 {timeLeft.progress.toFixed(1)}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{display:'flex', justifyContent:'space-between', marginTop:'15px', fontSize:'0.7rem', opacity:0.8}}>
+                                <span>☁️ 数据保存在本地</span>
+                                <span onClick={()=>{setShowDataBackup(true); setExportStage('select');}} style={{textDecoration:'underline', cursor:'pointer'}}>备份/恢复</span>
+                            </div>
+                        </div>
+
+                        {showDataBackup && (
+                            <div className="card fade-in" style={{background:'#fffbeb', border:'1px solid #fcd34d'}}>
+                                <div style={{fontWeight:'bold', marginBottom:'10px', color:'#92400e'}}>📦 数据管家</div>
+                                <div style={{background:'white', padding:'10px', borderRadius:'8px', marginBottom:'10px'}}>
+                                    <div style={{fontSize:'0.8rem', color:'#b45309', fontWeight:'bold', marginBottom:'8px'}}>1. 选择要导出的数据</div>
+                                    {exportStage === 'select' && (
+                                        <div className="grid-3">
+                                            <button className="btn" onClick={()=>startExport('grades')} style={{fontSize:'0.75rem', padding:'8px', flexDirection:'column'}}><span style={{fontSize:'1.2rem'}}>📊</span>导出成绩</button>
+                                            <button className="btn" onClick={()=>startExport('mom')} style={{fontSize:'0.75rem', padding:'8px', flexDirection:'column'}}><span style={{fontSize:'1.2rem'}}>💌</span>妈妈树洞</button>
+                                            <button className="btn" onClick={()=>startExport('yanxi')} style={{fontSize:'0.75rem', padding:'8px', flexDirection:'column'}}><span style={{fontSize:'1.2rem'}}>🍀</span>彦熹树洞</button>
+                                        </div>
+                                    )}
+                                    {exportStage === 'verify' && (
+                                        <div className="fade-in">
+                                            <div style={{fontSize:'0.8rem', marginBottom:'5px'}}>🔐 请输入{targetExport==='mom'?'妈妈':'彦熹'}的树洞密码：</div>
+                                            <input type="password" className="input-field" value={verifyPwd} onChange={e=>{setVerifyPwd(e.target.value); setExportError('');}} />
+                                            {exportError && <div style={{color:'#ef4444', fontSize:'0.7rem', marginTop:'5px'}}>{exportError}</div>}
+                                            <div style={{display:'flex', gap:'10px', marginTop:'10px'}}>
+                                                <button className="btn" onClick={()=>setExportStage('select')} style={{flex:1, fontSize:'0.8rem'}}>取消</button>
+                                                <button className="btn btn-primary" onClick={verifyAndGenerate} style={{flex:1, marginTop:0, fontSize:'0.8rem'}}>确认导出</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {exportStage === 'result' && (
+                                        <div className="fade-in">
+                                            <div style={{fontSize:'0.8rem', color:'#059669', marginBottom:'5px'}}>✅ 数据生成成功！请点击复制：</div>
+                                            <textarea className="backup-textarea" style={{height:'80px'}} readOnly value={exportResult}></textarea>
+                                            <div style={{display:'flex', gap:'10px'}}>
+                                                <button className="btn" onClick={()=>setExportStage('select')} style={{flex:1, fontSize:'0.8rem'}}>返回</button>
+                                                <button className="btn btn-primary" onClick={copyExportResult} style={{flex:1, marginTop:0, fontSize:'0.8rem'}}>一键复制</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div style={{background:'white', padding:'10px', borderRadius:'8px'}}>
+                                    <div style={{fontSize:'0.8rem', color:'#b45309', fontWeight:'bold', marginBottom:'5px'}}>2. 恢复数据</div>
+                                    <div style={{fontSize:'0.7rem', color:'#9ca3af', marginBottom:'5px'}}>粘贴刚才复制的任意乱码，自动识别恢复：</div>
+                                    <textarea className="backup-textarea" placeholder='在此粘贴...' value={importText} onChange={e => setImportText(e.target.value)}></textarea>
+                                    <button className="btn btn-primary" onClick={handleSmartImport} style={{marginTop:'0'}}>📥 智能识别并恢复</button>
+                                </div>
+                                <div style={{textAlign:'center', marginTop:'15px', fontSize:'0.8rem', color:'#b45309', cursor:'pointer'}} onClick={()=>setShowDataBackup(false)}>关闭窗口</div>
+                            </div>
+                        )}
+
+                        <div className="grid-2">
+                            <button className="btn" onClick={()=>{ setEditModeId(null); setFormData(initialFormState()); setView('add'); setShowStateInput(false); }}><span style={{fontSize:'1.5rem'}}>📝</span><div style={{textAlign:'left'}}><div>录入成绩</div><div style={{fontSize:'0.7rem', color:'#9ca3af', fontWeight:'normal'}}>自动核对</div></div></button>
+                            <button className="btn" onClick={()=>setView('analysis')}><span style={{fontSize:'1.5rem'}}>📊</span><div style={{textAlign:'left'}}><div>多维分析</div><div style={{fontSize:'0.7rem', color:'#9ca3af', fontWeight:'normal'}}>趋势 · AI</div></div></button>
+                        </div>
+
+                        {badges.length > 0 && (
+                            <div className="card" style={{marginTop:'16px', background:'linear-gradient(to bottom right, #fff, #fefce8)'}}>
+                                <div style={{fontSize:'0.9rem', fontWeight:'bold', color:'#065f46', marginBottom:'10px'}}>🏆 荣誉勋章 ({badges.length})</div>
+                                <div className="badge-wall">{badges.map((b, i) => (
+                                    <div key={i} className="badge-item">
+                                        <div className="badge-circle">{b.icon}</div>
+                                        <div className="badge-name">{b.name}</div>
+                                        <div className="badge-detail">{b.semester}·{b.exam.slice(0,2)}</div>
+                                        {b.shortDesc && <div className="badge-sub">{b.shortDesc}</div>}
+                                    </div>
+                                ))}</div>
+                            </div>
+                        )}
+
+                        <div className="card" style={{marginTop:'16px'}}>
+                            {latest ? (
+                                <>
+                                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px', borderBottom:'1px solid #f3f4f6', paddingBottom:'10px'}}>
+                                        <div><div style={{fontSize:'0.7rem', color:'#9ca3af', fontWeight:'bold'}}>LATEST EXAM</div><div style={{fontSize:'1.1rem', fontWeight:'bold'}}>{latest.examName}</div></div>
+                                        <span className="tag tag-green">{latest.semester}</span>
+                                    </div>
+                                    <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
+                                        <div style={{flex:1, background:'#ecfdf5', padding:'15px', borderRadius:'12px', textAlign:'center'}}>
+                                            <div style={{fontSize:'1.8rem', fontWeight:'bold', color:'#059669'}}>{latest.totalScore || '-'}</div>
+                                            <div style={{fontSize:'0.7rem', color:'#059669'}}>总分</div>
+                                        </div>
+                                        <div style={{flex:1.2, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'5px'}}>
+                                            <RankBadge label="班排" value={latest.classRank} color="blue" />
+                                            <RankBadge label="校排" value={latest.schoolRank} color="orange" />
+                                            <RankBadge label="级排" value={latest.levelRank} color="cyan" />
+                                        </div>
+                                    </div>
+                                    <div style={{height:'220px', marginTop:'20px', marginLeft:'-10px', position:'relative'}}>
+                                        <div style={{position:'absolute', top:0, right:10, fontSize:'0.7rem', color:'#9ca3af', zIndex:10}}>* 显示满分率 (%)</div>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={SUBJECTS.map(sub => ({ subject: sub, fullMark: FULL_MARKS[sub], originalScore: latest.scores[sub] || 0, percent: latest.scores[sub] ? (latest.scores[sub] / FULL_MARKS[sub]) * 100 : 0 }))}>
+                                                <PolarGrid stroke="#e5e7eb" />
+                                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 11, fontWeight:'bold' }} />
+                                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                                <Tooltip formatter={(value, name, props) => [props.payload.originalScore + '分', '得分']} labelFormatter={(label) => label + ` (满分${FULL_MARKS[label]})`} />
+                                                <Radar name={latest.examName} dataKey="percent" stroke="#059669" fill="#10b981" fillOpacity={0.5} />
+                                            </RadarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <button className="btn" style={{width:'100%', marginTop:'10px', fontSize:'0.8rem', color:'#6b7280'}} onClick={()=>setView('history')}>查看所有历史记录 ➡️</button>
+                                </>
+                            ) : (
+                                <div style={{textAlign:'center', padding:'40px 0', color:'#9ca3af'}}><div style={{fontSize:'2rem', marginBottom:'10px'}}>📖</div><div>还没有记录，快去录入吧</div></div>
+                            )}
+                        </div>
+
+                        {/* 妈妈的树洞 (Forest Green) */}
+                        <TreeHole 
+                            title="💌 妈妈的树洞" 
+                            prefix="mom" 
+                            defaultPwd="050809" 
+                            resetCode="20050809"
+                            defaultMsg="彦熹加油，你是最棒的" 
+                            theme={{border: '#34d399', bg: '#ecfdf5', btn: '#059669', title: '#064e3b', text: '#064e3b'}} 
+                        />
+
+                        {/* 彦熹的树洞 (Lime) */}
+                        <TreeHole 
+                            title="🍀 彦熹的树洞" 
+                            prefix="yanxi" 
+                            defaultPwd="080812" 
+                            resetCode="20080812"
+                            defaultMsg="每天都要开心一点点~" 
+                            theme={{border: '#a3e635', bg: '#f7fee7', btn: '#65a30d', title: '#365314', text: '#3f6212'}} 
+                        />
+                    </div>
+                );
+            };
+
+            const renderAnalysis = () => {
+                const chartData = exams.map(e => ({
+                    name: e.examName,
+                    总分: e.totalScore,
+                    班排: e.classRank,
+                    校排: e.schoolRank,
+                    级排: e.levelRank,
+                    ...e.scores,
+                    ...Object.entries(e.ranks || {}).reduce((acc, [k, v]) => ({...acc, [`${k}排`]: v}), {})
+                }));
+
+                const subjectsList = ['总分', ...SUBJECTS];
+
+                return (
+                    <div className="fade-in">
+                        <div style={{display:'flex', alignItems:'center', marginBottom:'15px'}}>
+                            <button className="back-btn" onClick={()=>setView('dashboard')}>⬅️</button>
+                            <h2 style={{fontSize:'1.2rem', margin:0}}>深度分析</h2>
+                        </div>
+                        
+                        <div className="tab-scroll">
+                            {subjectsList.map(sub => (
+                                <div key={sub} className={`subject-tab ${analysisSubject === sub ? 'active' : ''}`} onClick={() => setAnalysisSubject(sub)}>{sub}</div>
+                            ))}
+                        </div>
+
+                        {exams.length < 2 ? (
+                             <div className="card" style={{textAlign:'center', padding:'40px', color:'#9ca3af'}}><div>📉</div><div>图表数据不足，请至少录入两次考试</div></div>
+                        ) : (
+                            <>
+                                <div className="card">
+                                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'15px'}}>
+                                        <h3 style={{fontSize:'0.9rem', color:'#059669', margin:0}}>📈 {analysisSubject}分数走势</h3>
+                                        {/* 极值文字显示 (最稳妥的方案) */}
+                                        {extrema && (
+                                            <div style={{display:'grid', gridTemplateColumns:'auto 1fr', gap:'5px 10px', fontSize:'0.7rem', textAlign:'left'}}>
+                                                <span>👑</span><span style={{color:'#d97706', fontWeight:'bold'}}>最高:{extrema.max.val} <span style={{color:'#9ca3af', fontWeight:'normal'}}>({extrema.max.semester}·{extrema.max.name})</span></span>
+                                                <span>💧</span><span style={{color:'#64748b', fontWeight:'bold'}}>最低:{extrema.min.val} <span style={{color:'#9ca3af', fontWeight:'normal'}}>({extrema.min.semester}·{extrema.min.name})</span></span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div style={{height:'200px'}}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={chartData}>
+                                                <defs><linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#059669" stopOpacity={0.2}/><stop offset="95%" stopColor="#059669" stopOpacity={0}/></linearGradient></defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6"/>
+                                                <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                                                <Tooltip contentStyle={{borderRadius:'10px', border:'none', boxShadow:'0 2px 10px rgba(0,0,0,0.1)'}}/>
+                                                <YAxis hide domain={['dataMin - 20', 'dataMax + 20']} />
+                                                <Area type="monotone" dataKey={analysisSubject} stroke="#059669" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" connectNulls />
+                                                {/* 极值标注 (LabelList) */}
+                                                {extrema && (
+                                                     <LabelList dataKey="valLabel" position="top" offset={10} style={{fill:'#d97706', fontSize:'11px', fontWeight:'bold'}} />
+                                                )}
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                <div className="card">
+                                    <h3 style={{fontSize:'0.9rem', color:'#d97706', marginBottom:'10px'}}>🎯 {analysisSubject === '总分' ? '排名追踪 (左轴班排·右轴校排)' : `${analysisSubject}排名`}</h3>
+                                    <div style={{height:'200px'}}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={chartData}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6"/>
+                                                <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                                                
+                                                {/* 双轴配置 */}
+                                                <YAxis yAxisId="class" reversed hide domain={['dataMin - 1', 'dataMax + 1']} />
+                                                <YAxis yAxisId="school" reversed hide domain={['dataMin - 20', 'dataMax + 20']} />
+                                                
+                                                <Tooltip />
+                                                <Legend />
+                                                
+                                                {analysisSubject === '总分' ? (
+                                                    <>
+                                                        <Line yAxisId="class" type="monotone" dataKey="班排" stroke="#3b82f6" strokeWidth={2} dot={{r:3}} connectNulls />
+                                                        <Line yAxisId="school" type="monotone" dataKey="校排" stroke="#f97316" strokeWidth={2} dot={{r:3}} connectNulls />
+                                                        {/* 修复：级排改为实线 */}
+                                                        <Line yAxisId="school" type="monotone" dataKey="级排" stroke="#06b6d4" strokeWidth={2} dot={{r:3}} connectNulls />
+                                                    </>
+                                                ) : (
+                                                    <Line yAxisId="school" type="monotone" dataKey={`${analysisSubject}排`} name="排名" stroke="#f59e0b" strokeWidth={2} dot={{r:3}} connectNulls/>
+                                                )}
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    {analysisSubject !== '总分' && <div style={{fontSize:'0.7rem', color:'#9ca3af', textAlign:'center', marginTop:'5px'}}>* 单科排名统一展示在右轴</div>}
+                                </div>
+                            </>
+                        )}
+
+                        <div className="card" style={{marginTop:'20px'}}>
+                            <div style={{display:'flex', alignItems:'center', gap:'10px', marginBottom:'10px'}}>
+                                <div style={{fontSize:'1.5rem'}}>🤖</div><div style={{fontWeight:'bold', color:'#5b21b6'}}>AI 智能复盘</div>
+                            </div>
+                            {aiStep === 0 && !aiResult && !isAiLoading && (
+                                <div>
+                                    <p style={{fontSize:'0.9rem', color:'#374151', marginBottom:'10px', lineHeight:'1.5'}}>只要两步，让 AI 帮你分析：</p>
+                                    <div style={{background:'#f3f4f6', padding:'10px', borderRadius:'8px', fontSize:'0.85rem', color:'#4b5563', marginBottom:'15px'}}>1. 点击下方按钮，复制数据。<br/>2. 打开 AI (如 Kimi、豆包)，粘贴发送。</div>
+                                    
+                                    <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px'}}>
+                                        <button className="btn btn-ai-student" onClick={()=>handleCopyPrompt('student')}>📋 复制彦熹版指令</button>
+                                        <button className="btn btn-ai-parent" onClick={()=>handleCopyPrompt('parent')}>📋 复制妈妈版指令</button>
+                                    </div>
+
+                                    <div style={{textAlign:'center', marginTop:'15px', borderTop:'1px dashed #e5e7eb', paddingTop:'10px'}}>
+                                        <div style={{fontSize:'0.8rem', color:'#9ca3af', marginBottom:'8px'}}>或者使用 API Key (高级用户)</div>
+                                        <div onClick={()=>setShowAdvancedAI(!showAdvancedAI)} style={{fontSize:'1.2rem', cursor:'pointer'}}>{showAdvancedAI ? '🔼' : '⚙️'}</div>
+                                    </div>
+                                </div>
+                            )}
+                            {aiStep === 1 && (
+                                <div className="fade-in" style={{textAlign:'center'}}>
+                                    <div style={{fontSize:'3rem', marginBottom:'10px'}}>✅</div>
+                                    <div style={{fontWeight:'bold', color:'#059669', marginBottom:'5px'}}>复制成功！</div>
+                                    <div style={{fontSize:'0.9rem', color:'#4b5563', marginBottom:'20px'}}>现在，去把它粘贴给 AI 吧：</div>
+                                    <div style={{display:'flex', gap:'10px', justifyContent:'center'}}>
+                                        <a href="https://kimi.moonshot.cn/" target="_blank" className="btn-link">🌙 Kimi</a>
+                                        <a href="https://www.doubao.com/" target="_blank" className="btn-link">🥟 豆包</a>
+                                        <a href="https://yiyan.baidu.com/" target="_blank" className="btn-link">💙 文心</a>
+                                    </div>
+                                    <button className="btn" style={{marginTop:'20px', width:'100%', fontSize:'0.8rem'}} onClick={()=>setAiStep(0)}>⬅️ 返回</button>
+                                </div>
+                            )}
+                            {showAdvancedAI && aiStep === 0 && (
+                                <div className="fade-in" style={{marginTop:'15px', background:'#f9fafb', padding:'10px', borderRadius:'10px'}}>
+                                    <div className="input-group"><label>Gemini API Key</label><input className="input-field" type="password" placeholder="粘贴 Key" value={apiKey} onChange={e=>setApiKey(e.target.value)} /></div>
+                                    <button className="btn btn-primary" style={{marginTop:'10px', background:'#4b5563'}} onClick={handleAPIAnalysis}>直接调用 Gemini</button>
+                                </div>
+                            )}
+                            {isAiLoading && <div style={{textAlign:'center', padding:'20px', color:'#7c3aed'}}>🧠 Gemini 正在思考中...</div>}
+                            {aiResult && (<div className="fade-in"><div className="markdown-body" dangerouslySetInnerHTML={{ __html: marked.parse(aiResult) }}></div><button className="btn" style={{marginTop:'15px', fontSize:'0.8rem'}} onClick={()=>{setAiResult(""); setAiStep(0);}}>🔄 重新分析</button></div>)}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderHistory = () => (
+                <div className="fade-in">
+                    <div style={{display:'flex', alignItems:'center', marginBottom:'15px'}}>
+                        <button className="back-btn" onClick={()=>setView('dashboard')}>⬅️</button>
+                        <h2 style={{fontSize:'1.2rem', margin:0}}>历史记录</h2>
+                    </div>
+                    {exams.slice().reverse().map(exam => (
+                        <div key={exam.id} className="card" style={{borderLeft:'4px solid #059669'}}>
+                            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px', borderBottom:'1px solid #f9fafb', paddingBottom:'10px'}}>
+                                <div>
+                                    <div style={{fontWeight:'bold', fontSize:'1.1rem'}}>{exam.examName}</div>
+                                    <div style={{fontSize:'0.75rem', color:'#9ca3af', marginTop:'4px'}}>
+                                        <span className="tag tag-green" style={{marginRight:'5px'}}>{exam.semester}</span>
+                                        <span>📅 {new Date(Number(exam.timestamp)).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                                <div style={{textAlign:'right'}}>
+                                    <div style={{fontSize:'1.4rem', fontWeight:'bold', color:'#059669'}}>{exam.totalScore}</div>
+                                    <div style={{fontSize:'0.7rem', color:'#9ca3af'}}>总分</div>
+                                </div>
+                            </div>
+                            
+                            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'5px', marginBottom:'15px'}}>
+                                <RankBadge label="班排" value={exam.classRank} color="blue" />
+                                <RankBadge label="校排" value={exam.schoolRank} color="orange" />
+                                <RankBadge label="级排" value={exam.levelRank} color="cyan" />
+                            </div>
+
+                            <div style={{display:'grid', gridTemplateColumns:'repeat(6, 1fr)', background:'#f9fafb', borderRadius:'8px', padding:'8px', textAlign:'center', marginBottom:'10px'}}>
+                                {SUBJECTS.map(sub => (
+                                    <div key={sub}>
+                                        <div style={{fontSize:'0.6rem', color:'#9ca3af', fontWeight:'bold'}}>{sub}</div>
+                                        <div style={{fontSize:'0.9rem', fontWeight:'500', color:'#059669'}}>{exam.scores[sub]||'-'}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            {exam.note && <div style={{background:'#fffbeb', padding:'8px', borderRadius:'8px', fontSize:'0.8rem', color:'#92400e', marginBottom:'10px'}}>“{exam.note}”</div>}
+                            <div style={{textAlign:'right', display:'flex', justifyContent:'flex-end', gap:'10px'}}>
+                                <button onClick={()=>handleEditExam(exam)} style={{background:'none', border:'none', color:'#3b82f6', fontSize:'0.8rem'}}>✏️ 编辑</button>
+                                <button onClick={()=>handleDeleteExam(exam.id)} style={{background:'none', border:'none', color:'#ef4444', fontSize:'0.8rem'}}>🗑️ 删除</button>
+                            </div>
+                        </div>
+                    ))}
+                    {exams.length === 0 && <div style={{textAlign:'center', color:'#9ca3af', padding:'20px'}}>暂无记录</div>}
+                </div>
+            );
+
+            const RatingSlider = ({label, value, onChange}) => (
+                <div className="slider-container">
+                    <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.8rem', fontWeight:'bold', color:'#4b5563'}}><span>{label}</span><span>{value} / 5</span></div>
+                    <input type="range" min="1" max="5" value={value} onChange={e=>onChange(Number(e.target.value))} />
+                </div>
+            );
+
+            return (
+                <div className="container">
+                    {view === 'dashboard' && renderDashboard()}
+                    {view === 'add' && renderAddForm()}
+                    {view === 'analysis' && renderAnalysis()}
+                    {view === 'history' && renderHistory()}
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+<script>
+  // 注册 Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('PWA 注册成功'))
+        .catch(err => console.log('PWA 注册失败', err));
+    });
+  }
+</script>
+<link rel="manifest" href="./manifest.json">
+</html>
