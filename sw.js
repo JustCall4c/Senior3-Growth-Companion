@@ -1,4 +1,4 @@
-const CACHE_NAME = 'growth-assistant-v1';
+const CACHE_NAME = 'growth-assistant-v2';
 // 定义需要离线缓存的资源（包括你的 CDN 链接）
 const urlsToCache = [
   './',
@@ -24,4 +24,5 @@ self.addEventListener('fetch', event => {
       return response || fetch(event.request);
     })
   );
+
 });
